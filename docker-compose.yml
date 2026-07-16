@@ -1,0 +1,47 @@
+version: "3.9"
+
+# Levanta la infraestructura local necesaria para la Practica Unidad III:
+# PostgreSQL 16 (persistencia) y Redis 7 (sesion/cache/blacklist JWT).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: unidad3-postgres
+    environment:
+      POSTGRES_DB: unidad3_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - unidad3_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: unidad3-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: unidad3-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@uteq.edu.ec
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  unidad3_pgdata:
