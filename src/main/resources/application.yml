@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: unidad3-practica
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:unidad3_db}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate   # el esquema lo gobierna Flyway, JPA solo valida
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: America/Guayaquil
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000   # 10 minutos por defecto (ver CacheConfig para TTL por cache)
+      cache-null-values: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:c2VjcmV0by11bmlkYWQzLXV0ZXEtYXBsaWNhY2lvbmVzLXdlYi1jYW1iaWFyLWVuLXByb2R1Y2Npb24=}
+    expiration-ms: ${JWT_EXP_MS:3600000}   # 1 hora
+    cookie-name: ACCESS_TOKEN
+    cookie-secure: false   # true en produccion (HTTPS)
+
+logging:
+  level:
+    com.uteq.unidad3: DEBUG
+    org.springframework.security: INFO
