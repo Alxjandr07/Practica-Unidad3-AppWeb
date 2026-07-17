@@ -1,0 +1,327 @@
+@startuml
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 40
+skinparam defaultFontSize 12
+skinparam classFontSize 13
+skinparam packageFontSize 14
+skinparam packageFontStyle bold
+skinparam shadowing false
+skinparam backgroundColor #FEFEFE
+
+title Diagrama de Clases — Unidad III Práctica\nCooperativa de Transporte (Spring Boot 3.3.2)
+
+' ===================== PAQUETE DOMAIN =====================
+package "domain" #E8F5E9 {
+    class Vehiculo {
+        - id : Long
+        - placa : String
+        - marca : String
+        - modelo : String
+        - anioFabricacion : Integer
+        - capacidadPasajeros : Integer
+        - tipoServicio : TipoServicio
+        - estado : EstadoVehiculo
+        - conductorAsignado : String
+        - rutaAsignada : String
+        - fechaRegistro : LocalDateTime
+        __
+        + prePersist() : void
+    }
+
+    class Usuario {
+        - id : Long
+        - username : String
+        - passwordHash : String
+        - nombreCompleto : String
+        - email : String
+        - rol : Rol
+        - activo : boolean
+        - fechaCreacion : LocalDateTime
+        __
+        + getAuthorities() : Collection<GrantedAuthority>
+        + getPassword() : String
+        + isEnabled() : boolean
+    }
+
+    enum Rol {
+        ADMIN
+        OPERADOR
+        CONDUCTOR
+    }
+
+    enum TipoServicio {
+        URBANO
+        INTERPROVINCIAL
+        ESCOLAR
+        CARGA_LIVIANA
+    }
+
+    enum EstadoVehiculo {
+        ACTIVO
+        MANTENIMIENTO
+        INACTIVO
+        REVISION_TECNICA
+    }
+
+    Vehiculo --> EstadoVehiculo
+    Vehiculo --> TipoServicio
+    Usuario --> Rol
+}
+
+' ===================== PAQUETE DTO =====================
+package "dto" #E3F2FD {
+    class VehiculoRequest {
+        <<record>>
+        + placa : String
+        + marca : String
+        + modelo : String
+        + anioFabricacion : Integer
+        + capacidadPasajeros : Integer
+        + tipoServicio : TipoServicio
+        + estado : EstadoVehiculo
+        + conductorAsignado : String
+        + rutaAsignada : String
+    }
+
+    class VehiculoResponse {
+        <<record>>
+        + id : Long
+        + placa : String
+        + marca : String
+        + modelo : String
+        + anioFabricacion : Integer
+        + capacidadPasajeros : Integer
+        + tipoServicio : TipoServicio
+        + estado : EstadoVehiculo
+        + conductorAsignado : String
+        + rutaAsignada : String
+        + fechaRegistro : LocalDateTime
+        __
+        + {static} desde(Vehiculo) : VehiculoResponse
+    }
+
+    class LoginRequest {
+        <<record>>
+        + username : String
+        + password : String
+    }
+
+    class LoginResponse {
+        <<record>>
+        + username : String
+        + rol : String
+        + mensaje : String
+    }
+}
+
+' ===================== PAQUETE REPOSITORY =====================
+package "repository" #FFF3E0 {
+    interface VehiculoRepository {
+        + findByPlaca(String) : Optional<Vehiculo>
+        + existsByPlaca(String) : boolean
+        + findByEstado(EstadoVehiculo, Pageable) : Page<Vehiculo>
+        + findByTipoServicio(TipoServicio, Pageable) : Page<Vehiculo>
+        + countByEstado(EstadoVehiculo) : long
+    }
+
+    interface UsuarioRepository {
+        + findByUsername(String) : Optional<Usuario>
+        + existsByUsername(String) : boolean
+        + existsByEmail(String) : boolean
+    }
+
+    class VehiculoSpecifications {
+        <<utility>>
+        + {static} conFiltros(EstadoVehiculo, TipoServicio, String) : Specification<Vehiculo>
+    }
+}
+
+' ===================== PAQUETE SERVICE =====================
+package "service" #F3E5F5 {
+    interface VehiculoService {
+        + buscar(EstadoVehiculo, TipoServicio, String, Pageable) : Page<VehiculoResponse>
+        + obtenerPorId(Long) : VehiculoResponse
+        + crear(VehiculoRequest) : VehiculoResponse
+        + actualizar(Long, VehiculoRequest) : VehiculoResponse
+        + eliminar(Long) : void
+    }
+
+    class VehiculoServiceImpl {
+        - vehiculoRepository : VehiculoRepository
+        __
+        + buscar(...) : Page<VehiculoResponse>
+        + obtenerPorId(Long) : VehiculoResponse
+        + crear(VehiculoRequest) : VehiculoResponse
+        + actualizar(Long, VehiculoRequest) : VehiculoResponse
+        + eliminar(Long) : void
+        __
+        - mapear(Vehiculo, VehiculoRequest) : Vehiculo
+    }
+
+    class AuthService {
+        - authenticationManager : AuthenticationManager
+        - jwtService : JwtService
+        - blacklistService : TokenBlacklistService
+        - cookieProperties : CookieProperties
+        __
+        + login(LoginRequest, HttpServletResponse) : UserDetails
+        + logout(HttpServletRequest, HttpServletResponse) : void
+    }
+}
+
+' ===================== PAQUETE CONTROLLER =====================
+package "controller" #FCE4EC {
+    class VehiculoController {
+        - vehiculoService : VehiculoService
+        __
+        + listar(?, ?, ?, Pageable) : ResponseEntity<Page<VehiculoResponse>>
+        + obtener(Long) : ResponseEntity<VehiculoResponse>
+        + crear(VehiculoRequest) : VehiculoResponse
+        + actualizar(Long, VehiculoRequest) : ResponseEntity<VehiculoResponse>
+        + eliminar(Long) : void
+    }
+
+    class AuthController {
+        - authService : AuthService
+        __
+        + login(LoginRequest, HttpServletResponse) : ResponseEntity<LoginResponse>
+        + logout(HttpServletRequest, HttpServletResponse) : ResponseEntity<Void>
+    }
+}
+
+' ===================== PAQUETE SECURITY =====================
+package "security" #EDE7F6 {
+    class JwtService {
+        - signingKey : SecretKey
+        - expirationMs : long
+        __
+        + generarToken(UserDetails) : String
+        + extraerUsername(String) : String
+        + extraerJti(String) : String
+        + extraerExpiracion(String) : Date
+        + esTokenValido(String, UserDetails) : boolean
+        + msRestantes(String) : long
+    }
+
+    class JwtAuthFilter {
+        - jwtService : JwtService
+        - blacklistService : TokenBlacklistService
+        - userDetailsService : UserDetailsService
+        - cookieProperties : CookieProperties
+        __
+        + doFilterInternal(HttpServletRequest, HttpServletResponse, FilterChain) : void
+    }
+
+    class TokenBlacklistService {
+        - redisTemplate : StringRedisTemplate
+        __
+        + invalidar(String jti, long ttlMs) : void
+        + estaInvalidado(String jti) : boolean
+    }
+
+    class CookieUtil {
+        <<utility>>
+        + {static} crearCookieToken(...) : Cookie
+        + {static} crearCookieExpirada(...) : Cookie
+        + {static} leerCookie(HttpServletRequest, String) : Optional<String>
+    }
+
+    class CookieProperties {
+        - cookieName : String
+        - cookieSecure : boolean
+        - expirationSeconds : int
+    }
+
+    class UsuarioDetailsServiceImpl {
+        - usuarioRepository : UsuarioRepository
+        __
+        + loadUserByUsername(String) : UserDetails
+    }
+}
+
+' ===================== PAQUETE CONFIG =====================
+package "config" #ECEFF1 {
+    class SecurityConfig {
+        - jwtAuthFilter : JwtAuthFilter
+        - userDetailsService : UserDetailsService
+        __
+        + passwordEncoder() : PasswordEncoder
+        + authenticationProvider() : DaoAuthenticationProvider
+        + authenticationManager(...) : AuthenticationManager
+        + securityFilterChain(HttpSecurity) : SecurityFilterChain
+    }
+
+    class RedisConfig {
+        __
+        + cacheManager(RedisConnectionFactory) : CacheManager
+        + vehiculoListadoKeyGenerator() : KeyGenerator
+    }
+}
+
+' ===================== PAQUETE EXCEPTION =====================
+package "exception" #FFF9C4 {
+    class GlobalExceptionHandler {
+        <<RestControllerAdvice>>
+        __
+        + handleBadCredentials(...) : ResponseEntity
+        + handleNotFound(...) : ResponseEntity
+        + handleDuplicate(...) : ResponseEntity
+        + handleValidation(...) : ResponseEntity
+    }
+
+    class RecursoNoEncontradoException {
+        - message : String
+    }
+
+    class RecursoDuplicadoException {
+        - message : String
+    }
+}
+
+' ===================== RELACIONES =====================
+' Controller -> Service
+VehiculoController ..> VehiculoService : <<uses>>
+AuthController ..> AuthService : <<uses>>
+
+' Service -> Repository
+VehiculoServiceImpl ..> VehiculoRepository : <<uses>>
+VehiculoServiceImpl ..> VehiculoSpecifications : <<uses>>
+AuthService ..> JwtService : <<uses>>
+AuthService ..> TokenBlacklistService : <<uses>>
+AuthService ..> CookieProperties : <<uses>>
+AuthService ..> CookieUtil : <<uses>>
+
+' Repository -> Entity
+VehiculoRepository ..> Vehiculo : <<CRUD>>
+UsuarioRepository ..> Usuario : <<CRUD>>
+
+' Security
+JwtAuthFilter ..> JwtService : <<uses>>
+JwtAuthFilter ..> TokenBlacklistService : <<uses>>
+JwtAuthFilter ..> CookieProperties : <<uses>>
+JwtAuthFilter ..> CookieUtil : <<uses>>
+UsuarioDetailsServiceImpl ..> UsuarioRepository : <<uses>>
+
+' Config
+SecurityConfig ..> JwtAuthFilter : <<wires>>
+SecurityConfig ..> UsuarioDetailsServiceImpl : <<wires>>
+
+' DTO mapping
+VehiculoResponse ..> Vehiculo : <<maps from>>
+VehiculoRequest ..> Vehiculo : <<maps to>>
+
+' Exception
+VehiculoServiceImpl ..> RecursoNoEncontradoException : <<throws>>
+VehiculoServiceImpl ..> RecursoDuplicadoException : <<throws>>
+GlobalExceptionHandler ..> RecursoNoEncontradoException : <<handles>>
+GlobalExceptionHandler ..> RecursoDuplicadoException : <<handles>>
+
+' External
+JwtAuthFilter ..> UsuarioDetailsServiceImpl : <<delegates>>
+VehiculoRepository -[hidden]right-> UsuarioRepository
+
+@enduml
