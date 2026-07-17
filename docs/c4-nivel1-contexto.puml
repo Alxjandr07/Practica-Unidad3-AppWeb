@@ -1,0 +1,25 @@
+@startuml C4_Context
+!include <C4/C4_Context>
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+title Nivel 1 — Diagrama de Contexto (C4)\nCooperativa de Transporte - Unidad III
+
+Person(usuario, "Usuario / Conductor", "Operario de la cooperativa que\nconsulta y gestiona vehículos")
+Person(admin, "Administrador", "Gestiona usuarios, vehículos\ny configuración del sistema")
+
+System(coop, "Sistema de Gestión\nde Vehículos", "API REST para gestión de\nvehículos con cache-aside y\nautenticación JWT stateless")
+
+SystemDb_Ext(postgres, "PostgreSQL 16", "Base de datos relacional\ncon esquema gestionado\npor Flyway migrations")
+System_Ext(redis, "Redis 7", "Caché distribuida (cache-aside)\ny blacklist de tokens JWT\nrevocados")
+System_Ext(angular, "Frontend Angular 17+", "SPA que consume la API REST\nvía cookies HttpOnly")
+
+Rel(usuario, angular, "Gestiona vehículos", "HTTPS")
+Rel(admin, angular, "Administra el sistema", "HTTPS")
+Rel(angular, coop, "Consume API REST", "HTTP/JSON + Cookie HttpOnly")
+Rel(coop, postgres, "Lee/escribe datos", "JDBC")
+Rel(coop, redis, "Cachea consultas /\nblacklist JWT", "Redis Protocol")
+
+SHOW_LEGEND(true)
+@enduml

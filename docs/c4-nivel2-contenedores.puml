@@ -1,0 +1,28 @@
+@startuml C4_Container
+!include <C4/C4_Container>
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+
+title Nivel 2 — Diagrama de Contenedores (C4)\nCooperativa de Transporte - Unidad III
+
+Person(usuario, "Usuario", "Gestiona vehículos\ndesde el navegador")
+
+System_Boundary(coop, "Sistema de Gestión\nde Vehículos") {
+
+    Container(angular, "Angular 17+", "TypeScript, SPA", "Frontend SPA que consume\nla API REST. Envía credenciales\ny recibe cookie HttpOnly.")
+
+    Container(backend, "Spring Boot 3.3.2", "Java 21, REST API", "Backend REST con arquitectura\nen capas (Controller → Service\n→ Repository → Entity).")
+
+    ContainerDb(postgres, "PostgreSQL 16", "Base de datos relacional", "Almacena usuarios y vehículos.\nEsquema gestionado por\nFlyway (V1-V3).")
+
+    ContainerDb(redis, "Redis 7", "Key-Value Store", "Cache-aside con TTL por cache\n(por ID: 30min, listado: 5min).\nBlacklist JWT por jti con TTL\n= tiempo restante del token.")
+}
+
+Rel(usuario, angular, "Usa", "HTTPS")
+Rel(angular, backend, "Consume API", "HTTP/JSON\nCookie: ACCESS_TOKEN")
+Rel(backend, postgres, "JPA/Hibernate", "JDBC + HikariCP")
+Rel(backend, redis, "Cache-Aside\n@Cacheable/@CacheEvict", "Spring Data Redis\nLettuce")
+
+SHOW_LEGEND(true)
+@enduml
