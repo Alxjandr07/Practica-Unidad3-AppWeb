@@ -1,0 +1,63 @@
+@startuml
+!theme plain
+skinparam backgroundColor #FEFEFE
+skinparam shadowing false
+skinparam defaultFontSize 13
+skinparam linetype ortho
+
+title Diagrama Entidad-Relación — Unidad III\nCooperativa de Transporte (PostgreSQL 16)
+
+entity "usuarios" as usuarios {
+    * **id** : BIGSERIAL <<PK>>
+    --
+    * username : VARCHAR(50) <<UNIQUE>>
+    * password_hash : VARCHAR(255)
+    * nombre_completo : VARCHAR(150)
+    * email : VARCHAR(150) <<UNIQUE>>
+    * rol : VARCHAR(20) <<CHECK>>
+    * activo : BOOLEAN
+    * fecha_creacion : TIMESTAMP
+}
+
+entity "vehiculos" as vehiculos {
+    * **id** : BIGSERIAL <<PK>>
+    --
+    * placa : VARCHAR(10) <<UNIQUE>>
+    * marca : VARCHAR(50)
+    * modelo : VARCHAR(50)
+    * anio_fabricacion : INTEGER
+    * capacidad_pasajeros : INTEGER
+    * tipo_servicio : VARCHAR(20) <<CHECK>>
+    * estado : VARCHAR(20) <<CHECK>>
+    conductor_asignado : VARCHAR(150)
+    ruta_asignada : VARCHAR(150)
+    * fecha_registro : TIMESTAMP
+}
+
+note bottom of usuarios
+  CHECK (rol IN
+    ('ADMIN', 'OPERADOR', 'CONDUCTOR'))
+
+  Datos semilla: 1 usuario admin
+  (V2__usuario_admin_inicial.sql)
+end note
+
+note bottom of vehiculos
+  CHECK (tipo_servicio IN
+    ('URBANO', 'INTERPROVINCIAL',
+     'ESCOLAR', 'CARGA_LIVIANA'))
+
+  CHECK (estado IN
+    ('ACTIVO', 'MANTENIMIENTO',
+     'INACTIVO', 'REVISION_TECNICA'))
+
+  Datos semilla: 60 registros
+  (V3__datos_semilla.sql)
+
+  Índices:
+  · idx_vehiculos_estado
+  · idx_vehiculos_tipo_servicio
+  · idx_vehiculos_placa
+end note
+
+@enduml
