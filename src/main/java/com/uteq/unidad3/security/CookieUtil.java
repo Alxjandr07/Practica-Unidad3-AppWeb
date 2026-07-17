@@ -16,7 +16,7 @@ public final class CookieUtil {
         cookie.setSecure(secure);       // true en produccion (requiere HTTPS)
         cookie.setPath("/");
         cookie.setMaxAge(maxAgeSegundos);
-        cookie.setAttribute("SameSite", "Strict"); // mitiga CSRF
+        cookie.setAttribute("SameSite", "Lax"); // Lax permite enviar cookie en top-level navigation y peticiones GET, pero en localhost (mismo sitio) funciona para CORS
         return cookie;
     }
 

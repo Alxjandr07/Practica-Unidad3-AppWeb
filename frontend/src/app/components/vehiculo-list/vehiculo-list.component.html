@@ -1,0 +1,63 @@
+<div class="list-container">
+  <header class="header">
+    <h2>Gestión de Vehículos</h2>
+    <div class="actions">
+      <button class="btn btn-primary" routerLink="/vehiculos/nuevo">Nuevo Vehículo</button>
+      <button class="btn btn-danger" (click)="logout()">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <div class="filters">
+    <select [(ngModel)]="filtroEstado" (change)="aplicarFiltro()">
+      <option value="">Todos los estados</option>
+      <option value="ACTIVO">Activo</option>
+      <option value="MANTENIMIENTO">Mantenimiento</option>
+      <option value="INACTIVO">Inactivo</option>
+    </select>
+
+    <select [(ngModel)]="filtroSort" (change)="aplicarFiltro()">
+      <option value="id,asc">ID (Asc)</option>
+      <option value="marca,asc">Marca (A-Z)</option>
+      <option value="anioFabricacion,desc">Año (Más recientes)</option>
+    </select>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Placa</th>
+        <th>Marca</th>
+        <th>Modelo</th>
+        <th>Año</th>
+        <th>Pasajeros</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let v of vehiculos">
+        <td>{{ v.id }}</td>
+        <td>{{ v.placa }}</td>
+        <td>{{ v.marca }}</td>
+        <td>{{ v.modelo }}</td>
+        <td>{{ v.anioFabricacion }}</td>
+        <td>{{ v.capacidadPasajeros }}</td>
+        <td><span class="badge" [ngClass]="v.estado?.toLowerCase()">{{ v.estado }}</span></td>
+        <td>
+          <button class="btn btn-small btn-edit" [routerLink]="['/vehiculos/editar', v.id]">Editar</button>
+          <button class="btn btn-small btn-delete" (click)="eliminarVehiculo(v.id)">Eliminar</button>
+        </td>
+      </tr>
+      <tr *ngIf="vehiculos.length === 0">
+        <td colspan="8" class="text-center">No hay vehículos registrados</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button [disabled]="currentPage === 0" (click)="cambiarPagina(currentPage - 1)">Anterior</button>
+    <span>Página {{ currentPage + 1 }} de {{ totalPages }} (Total: {{ totalElements }})</span>
+    <button [disabled]="currentPage === totalPages - 1" (click)="cambiarPagina(currentPage + 1)">Siguiente</button>
+  </div>
+</div>

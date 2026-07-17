@@ -39,6 +39,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                      FilterChain filterChain) throws ServletException, IOException {
 
         Optional<String> tokenOpt = CookieUtil.leerCookie(request, cookieProperties.cookieName());
+        
+        System.out.println("=== JWT FILTER: Request a " + request.getRequestURI() + " | Cookie presente? " + tokenOpt.isPresent() + " ===");
 
         if (tokenOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
             String token = tokenOpt.get();
@@ -58,6 +60,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             } catch (Exception ex) {
                 // token corrupto/expirado/firma invalida -> se continua sin autenticar
+                System.err.println("=== ERROR EN JWT AUTH FILTER ===");
+                ex.printStackTrace();
                 SecurityContextHolder.clearContext();
             }
         }
