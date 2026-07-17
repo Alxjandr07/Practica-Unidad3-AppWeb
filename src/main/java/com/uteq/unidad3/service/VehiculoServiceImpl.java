@@ -48,7 +48,8 @@ public class VehiculoServiceImpl implements VehiculoService {
     public Page<VehiculoResponse> buscar(EstadoVehiculo estado, TipoServicio tipoServicio,
                                           String texto, Pageable pageable) {
         var spec = VehiculoSpecifications.conFiltros(estado, tipoServicio, texto);
-        return vehiculoRepository.findAll(spec, pageable).map(VehiculoResponse::desde);
+        Page<VehiculoResponse> page = vehiculoRepository.findAll(spec, pageable).map(VehiculoResponse::desde);
+        return new com.uteq.unidad3.dto.RestPageImpl<>(page.getContent(), page.getPageable(), page.getTotalElements());
     }
 
     @Override

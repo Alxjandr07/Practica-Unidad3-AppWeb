@@ -46,6 +46,8 @@ export class VehiculoListComponent implements OnInit {
         error: (err) => {
           console.error('Error al cargar vehículos', err);
           if (err.status === 401 || err.status === 403) {
+             localStorage.removeItem('loggedIn');
+             this.authService.isLoggedIn.set(false);
              this.router.navigate(['/login']);
           }
         }
